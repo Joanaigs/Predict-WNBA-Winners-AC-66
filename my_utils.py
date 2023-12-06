@@ -146,7 +146,7 @@ def plot_metrics_over_time_test_train(years_tested, accuracy_scores, precision_s
     plt.suptitle(title)
 
     # Create a small noise factor to offset the lines
-    noise_factor = 0.01  # Adjust this value as needed
+    noise_factor = 0  # Adjust this value as needed
 
     # Plot accuracy for the three training methods with noise
     plt.subplot(1, 4, 1)
@@ -226,7 +226,7 @@ def plot_metrics_over_time_three(years_tested, accuracy_scores, precision_scores
     plt.suptitle('Metrics Over Time', fontsize=16)
 
     # Create a small noise factor to offset the lines
-    noise_factor = 0.01  # Adjust this value as needed
+    noise_factor = 0  # Adjust this value as needed
 
     # Plot accuracy for the three training methods with noise
     plt.subplot(1, 4, 1)
