@@ -16,6 +16,18 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 
 
 def backwards_elimination(df, model, scaling=False):
+    """Backwards elimination with SFS.
+    Receives a dataframe and a model and returns the best features for the model.
+    Also, it can scale the data if scaling is set to True.
+
+    Args:
+        df: the dataframe to be used
+        model: the model to be used
+        scaling (bool, optional): If the data needs scalling or not. Defaults to False.
+
+    Returns:
+        list: the list of the best features
+    """
     scaler=MinMaxScaler()
     if(scaling):
         X = scaler.fit_transform(df.drop(columns=['playoff']))
@@ -44,6 +56,17 @@ def backwards_elimination(df, model, scaling=False):
 
 
 def select_k_best(df, model, scaling=False, years_back=3):
+    """Selects the best k features for the model with mutual_info_classif.
+
+    Args:
+        df: the dataframe to be used
+        model: the model to be used
+        scaling (bool, optional): if the data needs scaling or not. Defaults to False.
+        years_back (int, optional): number of years to train with. Defaults to 3.
+
+    Returns:
+        _type_: _description_
+    """
     X=df.drop(['playoff'], axis=1)
     Y=df['playoff']
     hightest_accuracy_score = 0
@@ -84,6 +107,8 @@ def select_k_best(df, model, scaling=False, years_back=3):
     return hightest_selected_column_names
 
 def plot_metrics_over_time(years_tested, accuracy_scores, precision_scores, recall_scores, f1_scores, title="Normal Training"):
+    """Plots the metrics over time of the accuracy, precision, recall and f1 scores.
+    """
     # Create a graph to plot accuracy, precision, recall, and f1 over time
     plt.figure(figsize=(20, 5))
     plt.suptitle(title)
@@ -140,6 +165,8 @@ def plot_metrics_over_time(years_tested, accuracy_scores, precision_scores, reca
 
 
 def plot_metrics_over_time_test_train(years_tested, accuracy_scores, precision_scores, recall_scores, f1_scores, accuracy_train_scores, precision_train_scores, recall_train_scores, f1_train_scores, title="Normal Training"):
+    """Plots the metrics over time of the accuracy, precision, recall and f1 scores of the test and train data.
+    """
     # Create a graph to plot accuracy, precision, recall, and f1 over time
     # Define colors for the three training methods
     normal_color = 'blue'
@@ -189,7 +216,7 @@ def plot_metrics_over_time_test_train(years_tested, accuracy_scores, precision_s
     plt.subplot(1, 4, 4)
     plt.plot(years_tested, f1_scores + np.random.rand(len(years_tested))
              * noise_factor, marker='o', label='Test Results', color=normal_color)
-    plt.plot(years_tested, recall_train_scores + np.random.rand(len(years_tested))
+    plt.plot(years_tested, f1_train_scores + np.random.rand(len(years_tested))
              * noise_factor, marker='o', label='Train results', color=train_color)
     plt.title('F1 Over Time')
     plt.xlabel('Test Year')
@@ -220,6 +247,8 @@ def plot_metrics_over_time_test_train(years_tested, accuracy_scores, precision_s
 def plot_metrics_over_time_three(years_tested, accuracy_scores, precision_scores, recall_scores, f1_scores,
                                  bidirectional_accuracy_scores, bidirectional_precision_scores, bidirectional_recall_scores, bidirectional_f1_scores,
                                  kbest_accuracy_scores, kbest_precision_scores, kbest_recall_scores, kbest_f1_scores):
+    """Plots the metrics over time of the accuracy, precision, recall and f1 scores of the three training methods.
+    """
     # Define colors for the three training methods
     normal_color = 'blue'
     bidirectional_color = 'red'
@@ -336,7 +365,23 @@ def plot_metrics_over_time_three(years_tested, accuracy_scores, precision_scores
     print("F1:", kbest_f1_scores[-1])
 
 
-def split_and_train(year, years_back, model, data, target_col="playoff", scaling=False, train_prob=False):
+def split_and_train_conf_seperate(year, years_back, model, data, target_col="playoff", scaling=False, train_prob=False):
+    """Splits the data into training and test sets and trains the model.
+
+    Args:
+        year: year to test on
+        years_back: number of years to train with
+        model: the model to be used
+        data: the data to be used
+        target_col: Defaults to "playoff".
+        scaling (bool, optional): If the data needs scaling. Defaults to False.
+        train_prob (bool, optional): If true, also calculate train probability. Defaults to False.
+
+    Returns:
+        y_test: the test target values
+        y_pred: the predicted target values
+        y_prob: the probability of the predicted target values
+    """
     # Split the data into training and test sets
     train_data = data[data["year"] < year]
     train_data = train_data[train_data["year"] >= year - years_back]
@@ -390,6 +435,22 @@ def split_and_train(year, years_back, model, data, target_col="playoff", scaling
 
 
 def split_and_train_conferences_together(year, years_back, model, data, target_col="playoff", scaling=False, train_prob=False):
+    """Splits the data into training and test sets and trains the model.
+
+    Args:
+        year: year to test on
+        years_back: number of years to train with
+        model: the model to be used
+        data: the data to be used
+        target_col: Defaults to "playoff".
+        scaling (bool, optional): If the data needs scaling. Defaults to False.
+        train_prob (bool, optional): If true, also calculate train probability. Defaults to False.
+
+    Returns:
+        y_test: the test target values
+        y_pred: the predicted target values
+        y_prob: the probability of the predicted target values
+    """
     # Split the data into training and test sets
     train_data = data[data["year"] < year]
     train_data = train_data[train_data["year"] >= year - years_back]
@@ -449,12 +510,30 @@ def split_and_train_conferences_together(year, years_back, model, data, target_c
 
 
 def split_data(data):
+    """Splits the data into two dataframes, one for each conference."""
     data1 = data[data["confID_EA"] == 1]
     data2 = data[data["confID_WE"] == 1]
     return data1, data2
 
 
-def train_evaluate_decision_tree_graph_old(model, data, target_col="playoff", scaling=False, years_back=3, title="normal training"):
+def train_evaluate_decision_tree_graph_conf_seperate(model, data, target_col="playoff", scaling=False, years_back=3, title="normal training"):
+    """Trains and evaluates the model with the data for each year. Then plots the metrics over time.
+
+    Args:
+        model: the model to be used
+        data: the data to be used
+        target_col (str, optional): Defaults to "playoff".
+        scaling (bool, optional): if the data needs scaling. Defaults to False.
+        years_back (int, optional): years to train . Defaults to 3.
+        title (str, optional): Defaults to "normal training".
+
+    Returns:
+        years_tested: the years tested
+        accuracy_scores: the accuracy scores
+        precision_scores: the precision scores
+        recall_scores: the recall scores
+        f1_scores: the f1 scores
+    """
     accuracy_scores = []
     precision_scores = []
     recall_scores = []
@@ -514,11 +593,6 @@ def train_evaluate_decision_tree_graph_old(model, data, target_col="playoff", sc
         recall_scores_train.append(recall_train)
         f1_scores_train.append(f1_train)
 
-        # confusion matrix
-        # confusion_matrix = metrics.confusion_matrix(y_test, y_pred)
-        # cm_display = metrics.ConfusionMatrixDisplay(confusion_matrix, display_labels=['0', '1']).plot()
-        # cm_display.plot()
-        # plt.show()
 
     plot_metrics_over_time_test_train(years_tested, accuracy_scores, precision_scores, recall_scores,
                                       f1_scores, accuracy_scores_train, precision_scores_train, recall_scores_train, f1_scores_train, title)
@@ -526,6 +600,23 @@ def train_evaluate_decision_tree_graph_old(model, data, target_col="playoff", sc
 
 
 def train_evaluate_decision_tree_graph(model, data, target_col="playoff", scaling=False, years_back=3, title="normal training", roc=False):
+    """Trains and evaluates the model with the data for each year. Then plots the metrics over time.
+
+    Args:
+        model: the model to be used
+        data: the data to be used
+        target_col (str, optional): Defaults to "playoff".
+        scaling (bool, optional): if the data needs scaling. Defaults to False.
+        years_back (int, optional): years to train . Defaults to 3.
+        title (str, optional): Defaults to "normal training".
+
+    Returns:
+        years_tested: the years tested
+        accuracy_scores: the accuracy scores
+        precision_scores: the precision scores
+        recall_scores: the recall scores
+        f1_scores: the f1 scores
+    """
     accuracy_scores = []
     precision_scores = []
     recall_scores = []
@@ -595,6 +686,23 @@ def train_evaluate_decision_tree_graph(model, data, target_col="playoff", scalin
 
 
 def train_evaluate_decision_tree_average(model, data, target_col="playoff", scaling=False, title="normal training", years_back=3):
+    """Trains and evaluates the model with the data for each year. Then plots the metrics over time.
+
+    Args:
+        model: the model to be used
+        data: the data to be used
+        target_col (str, optional): Defaults to "playoff".
+        scaling (bool, optional): if the data needs scaling. Defaults to False.
+        years_back (int, optional): years to train . Defaults to 3.
+        title (str, optional): Defaults to "normal training".
+
+    Returns:
+        years_tested: the years tested
+        accuracy_scores: the accuracy scores
+        precision_scores: the precision scores
+        recall_scores: the recall scores
+        f1_scores: the f1 scores
+    """
     accuracy_scores = []
     precision_scores = []
     recall_scores = []
@@ -627,6 +735,17 @@ def train_evaluate_decision_tree_average(model, data, target_col="playoff", scal
 
 
 def train_evaluate_decision_tree_years_back(model, data, target_col="playoff", scaling=False):
+    """Trains and evaluates the model with the data for different years back. Then plots the metrics over time.
+
+    Args:
+        model (_type_): the model to be used
+        data (_type_): the data to be used
+        target_col (str, optional): _description_. Defaults to "playoff".
+        scaling (bool, optional): _description_. Defaults to False.
+
+    Returns:
+        _type_: _description_
+    """
 
     accuracy_scores = []
     precision_scores = []
