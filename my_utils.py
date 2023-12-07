@@ -2,12 +2,16 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn import metrics
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from sklearn.decomposition import PCA
 from sklearn.tree import plot_tree
 from sklearn.feature_selection import SelectKBest, f_classif, mutual_info_classif
 from mlxtend.feature_selection import SequentialFeatureSelector as SFS
+from sklearn.metrics import roc_curve, auc, confusion_matrix, ConfusionMatrixDisplay
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+
 
 
 
@@ -521,7 +525,7 @@ def train_evaluate_decision_tree_graph_old(model, data, target_col="playoff", sc
     return years_tested, accuracy_scores, precision_scores, recall_scores, f1_scores
 
 
-def train_evaluate_decision_tree_graph(model, data, target_col="playoff", scaling=False, years_back=3, title="normal training"):
+def train_evaluate_decision_tree_graph(model, data, target_col="playoff", scaling=False, years_back=3, title="normal training", roc=False):
     accuracy_scores = []
     precision_scores = []
     recall_scores = []
@@ -565,11 +569,25 @@ def train_evaluate_decision_tree_graph(model, data, target_col="playoff", scalin
         recall_scores_train.append(recall_train)
         f1_scores_train.append(f1_train)
 
-        # confusion matrix
-        # confusion_matrix = metrics.confusion_matrix(y_test, y_pred)
-        # cm_display = metrics.ConfusionMatrixDisplay(confusion_matrix, display_labels=['0', '1']).plot()
-        # cm_display.plot()
-        # plt.show()
+        if(year == 10 and roc):
+
+            # Confusion matrix
+            confusion_matrix_result = confusion_matrix(y_test, y_pred)
+            confusion_matrix_display = ConfusionMatrixDisplay(confusion_matrix_result, display_labels=['0', '1']).plot()
+
+            fpr, tpr, _ = roc_curve(y_test, y_prob)
+            roc_auc = auc(fpr, tpr)
+
+            plt.figure()
+            plt.plot(fpr, tpr, label=f'Year {year} (AUC = {roc_auc:.2f})')
+            plt.plot([0, 1], [0, 1], 'k--', lw=2)
+            plt.xlim([0.0, 1.0])
+            plt.ylim([0.0, 1.05])
+            plt.xlabel('False Positive Rate')
+            plt.ylabel('True Positive Rate')
+            plt.title(f'Receiver Operating Characteristic - Year {year}')
+            plt.legend(loc="lower right")
+            plt.show()
 
     plot_metrics_over_time_test_train(years_tested, accuracy_scores, precision_scores, recall_scores,
                                       f1_scores, accuracy_scores_train, precision_scores_train, recall_scores_train, f1_scores_train, title)
