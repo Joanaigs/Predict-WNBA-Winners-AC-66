@@ -1,5 +1,5 @@
-TeamID,Playoff
-ATL,Y
+ID,label
+ATL,N
 CHI,N
 CON,Y
 IND,Y
@@ -10,4 +10,4 @@ PHO,Y
 SAS,Y
 SEA,Y
 TUL,N
-WAS,N
+WAS,Y
